@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<script src="main.js" defer></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous" defer></script>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+	<script src="jquery.min.js"></script>
+</head>
+
+
+<!--//////////////////////////////////////////////-->
+
+
+<body>
+	<div id="app">
+
+		<header>
+			<nav class="navbar navbar-expand-md navbar-dark bg-dark">
+				<div class="container-fluid">
+					<a class="navbar-brand" href="#">Gym</a>
+					<button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+					<div class="navbar-collapse collapse" id="navbarCollapse" style="">
+						<ul class="navbar-nav me-auto mb-2 mb-md-0">
+							<li class="nav-item active">
+								<a class="nav-link" aria-current="page" href="#" v-on:click="getHome()">Главная</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#" v-on:click="pageDrop();getComments();">Отзывы</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link disabled" href="#">Контакты</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#" v-on:click="pageDrop();getProducts();">Товары</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link" href="#" v-on:click="pageDrop();getUsers();">Пользователи</a>
+							</li>
+						</ul>
+						<div v-if="api_token=='null'">
+							<button class="btn btn-success me-2" v-on:click="getAuth()">Авторизация</button>
+							<button class="btn btn-outline-secondary" v-on:click="getRegist()">Регистрация</button>
+						</div>
+						<div v-else>
+							<div v-if="api_token==admin_token">
+								<button class="btn btn-warning" v-on:click="forgetApi_token()">Выйти</button>
+							</div>
+							<div v-else>
+								<button class="btn btn-danger" v-on:click="forgetApi_token()">Выйти</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</nav>
+		</header>
+
+		<main>
+			<div class="container mt-4">
+
+				<!--//////////////////////////////////////////////-->
+				<!-- РЕГИСТРАЦИЯ -->
+				<!-- РЕГИСТРАЦИЯ -->
+
+				<div v-if="page === 'regist'">
+					<h2 class="display-4 mb-5">Регистрация</h2>
+
+					<div v-if="errors_regist!=''" class="alert alert-danger">
+						<ul>
+							<errors v-for="(error, index) in errors_regist" :key="index" :content=error[0] inline-template>
+								<li>{{ content }}</li>
+							</errors>
+						</ul>
+					</div>
+
+					<div class="row g-3 justify-content-md-center">
+						<div class="col-md-5">
+							<div class="row g-2">
+								<div class="col-sm-6">
+									<label for="firstName" class="form-label">Имя</label>
+									<input type="text" class="form-control" id="firstName" v-model="registration.name">
+								</div>
+								<div class="col-sm-6">
+									<label for="lastName" class="form-label">Фамилия</label>
+									<input type="text" class="form-control" id="lastName" v-model="registration.surname">
+								</div>
+
+								<div class="col-12">
+									<label for="email" class="form-label">Email</label>
+									<div class="input-group">
+										<span class="input-group-text">@</span>
+										<input type="email" class="form-control" id="email" placeholder="you@example.com" v-model="registration.email">
+									</div>
+								</div>
+
+								<div class="col-12">
+									<label for="password" class="form-label">Пароль</label>
+									<input type="password" class="form-control" id="password" v-model="registration.password">
+								</div>
+
+								<div class="col-12">
+									<label for="code" class="form-label">Пожелания <span class="text-muted">(Опционально)</span></label>
+									<input type="text" class="form-control" id="code" placeholder="" required="">
+								</div>
+
+								<hr class="my-4">
+
+								<button class="w-100 btn btn-primary btn-lg" type="submit" @click="registrationSend()">Зарегистрироваться</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+				<!--//////////////////////////////////////////////-->
+				<!-- АВТОРИЗАЦИЯ -->
+				<!-- АВТОРИЗАЦИЯ -->
+
+
+				<div v-if="page === 'auth'">
+					<h2 class="display-4 mb-5">Авторизация</h2>
+
+					<div v-if="errors_auth!=''" class="alert alert-danger">
+						<ul>
+							<errors v-for="(error, index) in errors_auth"  :key="index" :content=error[0] inline-template>
+								<li>{{ content }}</li>
+							</errors>
+						</ul>
+					</div>
+
+					<div class="row g-3 justify-content-md-center">
+						<div class="col-md-5">
+							<div class="row g-2">
+								<div class="col-12">
+									<label for="email" class="form-label">Email</label>
+									<div class="input-group">
+										<span class="input-group-text">@</span>
+										<input type="email" class="form-control" id="email" placeholder="you@example.com" v-model="authorisation.email">
+									</div>
+								</div>
+
+								<div class="col-12">
+									<label for="password" class="form-label">Пароль</label>
+									<input type="password" class="form-control" id="password" v-model="authorisation.password">
+								</div>
+
+								<hr class="my-4">
+
+								<button class="w-100 btn btn-primary btn-lg" type="submit" @click="authorisationSend()">Войти</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+
+				<!--//////////////////////////////////////////////-->
+				<!-- ГЛАВНАЯ -->
+				<!-- ГЛАВНАЯ -->
+
+
+				<div v-if="page === 'home'">
+					<div v-if="success_regist" class="alert alert-success">
+						Вы успешно зарегистрированы
+					</div>
+					<div v-if="success_auth" class="alert alert-success">
+						<div v-if="api_token==admin_token">
+							<p>Добро пожаловать, Администратор</p>
+						</div>
+						<div v-else>
+							<p>Вы успешно зашли</p>
+						</div>
+					</div>
+					<div class="p-4 p-md-5 mb-4 text-white rounded bg-dark">
+						<div class="col-md-6 px-0">
+							<h1 class="display-4 font-italic">Самый лучший спортивый зал в РФ</h1>
+							<p class="lead my-3">Пока что тут ничего нет, но приходите позже, здесь обязательно что-то будет.</p>
+						</div>
+					</div>
+				</div>
+
+
+				<!--//////////////////////////////////////////////-->
+				<!-- ПОЛЬЗОВАТЕЛИ -->
+				<!-- ПОЛЬЗОВАТЕЛИ -->
+				<div v-if="page === 'users'">
+					<h2 class="display-4 mb-5">Пользователи</h2>
+					<ul>
+						<users v-for="(user, index) in users" :key="index" :id="user.id" :name="user.name" :email="user.email" :surname="user.surname" inline-template>
+							<li>
+								<p>
+									{{ id }}
+									{{ name }}
+									{{ surname }}
+									{{ email }}
+									<button class="btn btn-sm btn-danger" @click="userDelete(id); getUsers()">Удалить</button>
+								</p>
+							</li>
+						</users>
+					</ul>
+					<div class="mb-3">
+						<button v-bind="controlRules('prev')" type="button" @click="prevPage();getUsers()" class="btn btn-primary btn-sm">Предыдущая страница</button>
+						<button v-bind="controlRules('next')" type="button" @click="nextPage();getUsers()" class="btn btn-primary btn-sm">Следующая страница</button>
+					</div>
+				</div>
+
+
+			<!--//////////////////////////////////////////////-->
+			<!-- ОТЗЫВЫ -->
+			<!-- ОТЗЫВЫ -->
+			<div v-if="page === 'comments'">
+				<h2 class="display-4 mb-5">Отзывы</h2>
+				<div class="mb-4">
+					<comment class="alert alert-info" v-for="(comment, index) in comments" :key="index" :id="comment.id" :api_token="comment.user.api_token" :name="comment.user.name" :surname="comment.user.surname" :date="comment.created_at" :content="comment.content" inline-template>
+						<div>
+							<h4>{{ name }} {{ surname }}</h4>
+							<p v-if="!comment_upd">{{ content }}</p>
+							<p v-else>
+								<textarea class="form-control mb-3" id="exampleFormControlTextarea1" rows="3" v-model="comment_upd_send.content"></textarea>
+							</p>
+							<p><small>{{ date }}</small></p>
+							<div v-if="apiCheck(api_token)">
+								<div v-if="!comment_upd">
+									<a href="#" class="btn btn-primary btn-sm" v-on:click="commentUpdate(content)">Изменить</a>
+									<a href="#" class="btn btn-danger btn-sm" v-on:click="commentDelete(id)">Удалить</a>
+								</div>
+								<div v-else>
+									<a href="#" class="btn btn-primary btn-sm" v-on:click="commentUpdateReal(id)">Изменить</a>
+									<a href="#" class="btn btn-danger btn-sm" v-on:click="comment_upd=false">Отменить</a>
+								</div>
+							</div>
+						</div>
+					</comment>
+				</div>
+				<div class="mb-3">
+					<button v-bind="controlRules('prev')" type="button" @click="prevPage();getComments()" class="btn btn-primary btn-sm">Предыдущая страница</button>
+					<button v-bind="controlRules('next')" type="button" @click="nextPage();getComments()" class="btn btn-primary btn-sm">Следующая страница</button>
+				</div>
+				<div class="mb-3" v-if="api_token!='null'">
+					<label for="exampleFormControlTextarea1" class="form-label">Добавить комментарий</label>
+					<textarea class="form-control mb-3" id="exampleFormControlTextarea1" rows="3" v-model="comment.content"></textarea>
+					<a href="#" class="btn btn-primary" v-on:click="commentSend()">Добавить</a>
+				</div>
+			</div>
+
+
+			<!--//////////////////////////////////////////////-->
+			<!-- ТОВАРЫ -->
+			<!-- ТОВАРЫ -->
+
+
+			<div v-if="page === 'products'">
+				<h2 class="display-4 mb-5">Товары</h2>
+				<div class="row">
+					<div class="form-group mb-3 col-2">
+						<input type="text" class="form-control mb-1" placeholder="" v-model="product.id">
+						<div class="form-group-prepend">
+							<button class="btn btn-primary btn-sm" @click="productFind(product.id)">Найти по id</button>
+						</div>
+					</div>
+					<div class="mb-3">
+						<button type="button" @click="pageDrop(); getProducts(); productGetByPriceUp()" class="btn btn-primary btn-sm">
+							По возрастанию 
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
+								<path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/>
+							</svg>
+						</button>
+						<button type="button" @click="pageDrop(); getProducts(); productGetByPriceDown()" class="btn btn-primary btn-sm">
+							По убыванию 
+							<svg style="transform: rotate(180deg);" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up" viewBox="0 0 16 16">
+								<path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5z"/>
+							</svg>
+						</button>
+						<button @click="pageDrop();getProducts();product.id=''" class="btn btn-primary btn-sm">Отмена</button>
+					</div>
+					<div class="mb-3">
+						<button v-bind="controlRules('prev')" type="button" @click="prevPage();getProducts()" class="btn btn-primary btn-sm">Предыдущая страница</button>
+						<button v-bind="controlRules('next')" type="button" @click="nextPage();getProducts()" class="btn btn-primary btn-sm">Следующая страница</button>
+					</div>
+					<div class="col row row-cols-1 row-cols-md-2 g-4">
+						<product class="col" v-for="(vue_product, index) in products" :key="index" :content="vue_product" :id="vue_product.id" :name="vue_product.name" :description="vue_product.description" :price="vue_product.price" :image="vue_product.image" inline-template>
+							<div class="card mb-5" style="width: 18rem;">
+								<img :src="image" class="card-img-top" alt="...">
+								<div class="card-body">
+									<h5 class="card-title">{{ name }}</h5>
+									<h6 class="card-subtitle mb-2 text-muted">{{ price }}$</h6>
+									<p class="card-text" style="overflow: auto; height: 60px;">{{ description }}</p>
+									<div v-if="apiCheck()">
+										<div v-if="!controlCheck()">
+											<a href="#" class="btn btn-warning" v-on:click="productUpdate(content)">Изменить</a>
+											<a href="#" class="btn btn-danger" v-on:click="productDelete(id)">Удалить</a>
+										</div>
+										<div v-else>
+											<div v-if="errors_product_update!=''" class="alert alert-danger">
+												<ul>
+													<errors v-for="(error, index) in errors_product_update"  :key="index" :content=error[0] inline-template>
+														<li>{{ content }}</li>
+													</errors>
+												</ul>
+											</div>
+											<li class="list-group-item d-flex justify-content-between lh-sm">
+												<div>
+													<label for="name" class="form-label"><h6>Название товара</h6></label>
+													<input type="text" class="form-control" id="name" v-model="product_upd_send.name">
+												</div>
+											</li>
+											<li class="list-group-item d-flex justify-content-between lh-sm">
+												<div>
+													<label for="description" class="form-label"><h6>Описание товара</h6></label>
+													<input type="text" class="form-control" id="description" v-model="product_upd_send.description">
+												</div>
+											</li>
+											<li class="list-group-item d-flex justify-content-between lh-sm">
+												<div>
+													<label for="price" class="form-label"><h6>Цена товара</h6></label>
+													<input type="text" class="form-control" id="price" v-model="product_upd_send.price">
+												</div>
+											</li>
+											<li class="list-group-item d-flex justify-content-between lh-sm">
+												<div>
+													<label for="img" class="form-label"><h6>Картинка</h6></label>
+													<input type="text" class="form-control" id="img" v-model="product_upd_send.image">
+												</div>
+											</li>
+											<li class="list-group-item d-flex justify-content-between">
+												<a href="#" class="btn btn-warning" v-on:click="productUpdateReal(id)">Изменить</a>
+												<a href="#" class="btn btn-danger" v-on:click="product_upd=false">Отмена</a>
+											</li>
+										</div>
+									</div>
+								</div>
+							</product>
+						</div>
+					</div>
+					<div class="col-3" v-if="api_token==admin_token">
+						<h4 class="d-flex justify-content-between align-items-center mb-3">
+							<span class="text-warning">Добавить товар</span>
+						</h4>
+						<div v-if="success_product" class="alert alert-success">
+							<div v-if="api_token==admin_token">
+								<p>Товар успешно добавлен</p>
+							</div>
+						</div>
+						<div v-if="errors_product!=''" class="alert alert-danger">
+							<ul>
+								<errors v-for="(error, index) in errors_product" :key="index" :content=error[0] inline-template>
+									<li>{{ content }}</li>
+								</errors>
+							</ul>
+						</div>
+						<ul class="list-group mb-3">
+							<li class="list-group-item d-flex justify-content-between lh-sm">
+								<div>
+									<label for="name" class="form-label"><h6>Название товара</h6></label>
+									<input type="text" class="form-control" id="name" v-model="product.name">
+								</div>
+							</li>
+							<li class="list-group-item d-flex justify-content-between lh-sm">
+								<div>
+									<label for="description" class="form-label"><h6>Описание товара</h6></label>
+									<input type="text" class="form-control" id="description" v-model="product.description">
+								</div>
+							</li>
+							<li class="list-group-item d-flex justify-content-between lh-sm">
+								<div>
+									<label for="price" class="form-label"><h6>Цена товара</h6></label>
+									<input type="text" class="form-control" id="price" v-model="product.price">
+								</div>
+							</li>
+							<li class="list-group-item d-flex justify-content-between lh-sm">
+								<div>
+									<label for="img" class="form-label"><h6>Картинка</h6></label>
+									<input type="text" class="form-control" id="img" v-model="product.image">
+								</div>
+							</li>
+							<li class="list-group-item d-flex justify-content-between">
+								<div class="input-group">
+									<button class="w-100 btn btn-warning btn-lg" @click="productSend()">Внести</button>
+								</div>
+							</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</div>
+</body>
+</html>
